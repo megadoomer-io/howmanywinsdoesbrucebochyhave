@@ -1,0 +1,67 @@
+name: Build and Publish
+
+on:
+  push:
+    branches: [main]
+
+env:
+  IMAGE: ghcr.io/megadoomer-io/howmanywinsdoesbrucebochyhave
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate image tag
+        id: meta
+        run: |
+          TAG="$(date -u +%Y%m%dT%H%M%S)-$(git rev-parse --short=7 HEAD)"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.meta.outputs.tag }}
+            ${{ env.IMAGE }}:latest
+
+  update-config:
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Checkout megadoomer-config
+        uses: actions/checkout@v4
+        with:
+          repository: megadoomer-io/megadoomer-config
+          token: ${{ secrets.GH_TOKEN_MEGADOOMER_CONFIG_WRITE }}
+
+      - name: Update image tag
+        run: |
+          cd applications/static/howmanywins/do
+          docker run --rm \
+            -v "$(pwd)":/work --workdir /work \
+            registry.k8s.io/kustomize/kustomize:v5.8.1 \
+            edit set image app=${{ env.IMAGE }}:${{ needs.build-and-push.outputs.tag }}
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "chore: update howmanywins image to ${{ needs.build-and-push.outputs.tag }}"
+          git push
