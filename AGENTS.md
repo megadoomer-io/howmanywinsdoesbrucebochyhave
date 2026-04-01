@@ -4,41 +4,41 @@ This is a claude-first repository. Claude is the primary developer; humans provi
 
 ## What This App Does
 
-A Flask web app that scrapes Bruce Bochy's career wins from baseball-reference.com and displays the count. Results are cached with a 15-minute TTL. Bochy retired in 2024 with 2,003 career wins, so the number is now static — consider simplifying to a static site.
+A FastAPI web app that scrapes Bruce Bochy's career wins from baseball-reference.com and displays the count. Results are cached with a 15-minute TTL.
 
 Live at: https://howmanywinsdoesbrucebochyhave.com
 
-## Current State (Legacy)
+## Tech Stack
 
-This codebase predates modern Python tooling and needs significant modernization. See `docs/plans/2026-04-01-modernization.md` for the full plan.
-
-| Aspect | Current | Target |
-|--------|---------|--------|
-| Python | 3.7 | 3.13+ |
-| Package manager | Pipenv + setup.py | uv + pyproject.toml |
-| Linting | flake8 | ruff |
-| Type checking | None | mypy (strict) |
-| CI | None (tox in Docker build) | GitHub Actions |
-| Container registry | Docker Hub (`mikedougherty/`) | GHCR (`ghcr.io/megadoomer-io/`) |
-| Tests | Placeholder only (`assert True`) | Real tests with mocked HTTP |
-| Framework | Flask + gunicorn | Consider FastAPI |
+| Aspect | Value |
+|--------|-------|
+| Python | 3.14+ |
+| Package manager | uv (pyproject.toml) |
+| Framework | FastAPI + uvicorn (port 8000) |
+| Linting | ruff |
+| Type checking | mypy (strict) |
+| Testing | pytest + httpx (async) |
+| CI | GitHub Actions (lint-and-test on PRs, publish on push to main) |
+| Container registry | GHCR (`ghcr.io/megadoomer-io/howmanywinsdoesbrucebochyhave`) |
+| Default branch | main |
 
 ## Project Structure
 
 ```
 howmanywinsdoesbrucebochyhave/
-  __init__.py                    # App factory, exports create_app()
-  __version__.py                 # Version string
-  howmanywinsdoesbrucebochyhave.py  # Main app: scraping, parsing, Flask route
-config/
-  gunicorn.py                    # Gunicorn config (empty)
+  __init__.py                       # App factory, exports create_app() and app
+  howmanywinsdoesbrucebochyhave.py   # Main app: scraping, parsing, FastAPI route
 templates/
-  index.html                     # Jinja2 template (wins count + refresh time)
+  index.html                        # Jinja2 template (wins count + refresh time)
 static/
-  css/styles.css                 # Minimal styling
+  css/styles.css                    # Giants-themed styling
 test/
-  test_howmanywinsdoesbrucebochyhave.py  # Placeholder test
-manifests/                       # DEPRECATED: K8s manifests now in megadoomer-config
+  conftest.py                       # Fixtures: sample HTML, cache clearing
+  test_howmanywinsdoesbrucebochyhave.py  # Parsing, caching, and route tests
+.github/workflows/
+  lint-and-test.yaml                # PR checks: ruff, mypy, pytest
+  publish.yaml                      # Build + push to GHCR, update megadoomer-config
+docs/plans/                         # Implementation plans
 ```
 
 ## Deployment
@@ -46,36 +46,40 @@ manifests/                       # DEPRECATED: K8s manifests now in megadoomer-c
 - **Cluster**: DigitalOcean (`megadoomer-do`)
 - **Namespace**: `howmanywins`
 - **K8s config**: `megadoomer-config` repo at `applications/static/howmanywins/do/`
-- **Routing**: Gateway API HTTPRoute → `megadoomer-gateway` (https-howmanywins listener)
+- **Routing**: Gateway API HTTPRoute -> `megadoomer-gateway`
 - **TLS**: cert-manager Certificate in `gateway-system` namespace
 - **DNS**: `external-dns` annotation on the HTTPRoute
-- **Image**: `mikedougherty/howmanywinsdoesbrucebochyhave:latest` (Docker Hub, no CI — manual push)
-- **Port**: 5000 (Flask/gunicorn)
+- **Image**: `ghcr.io/megadoomer-io/howmanywinsdoesbrucebochyhave` (CI auto-publishes on push to main)
+- **Port**: 8000 (uvicorn)
 
-Pushing to main does NOT auto-deploy. There is no CI/CD pipeline yet. Image updates require manual `docker build` and `docker push`.
+Pushing to main triggers CI which builds, publishes to GHCR, and updates the image tag in megadoomer-config. ArgoCD auto-syncs the deployment.
 
 ## Running Locally
 
 ```bash
-# Current (legacy) way:
-pipenv install --dev
-pipenv run python -m howmanywinsdoesbrucebochyhave
+# Install dependencies
+uv sync --all-extras
 
-# Or via Docker:
-docker build -t howmanywins .
-docker run -p 5000:5000 howmanywins
+# Run dev server
+make run
+
+# Run tests
+make test
+
+# Lint + type check
+make lint
+
+# Format code
+make format
+
+# Build Docker image
+make build
 ```
 
 ## Key Dependencies
 
-- `flask` — web framework
-- `requests` — HTTP client for scraping baseball-reference.com
-- `lxml` — HTML parsing (XPath queries)
-- `cachetools` — TTL cache decorator (15-minute cache on scraped data)
-- `gunicorn` — WSGI server
-
-## Modernization Priority
-
-When starting work on this repo, follow the plan in `docs/plans/2026-04-01-modernization.md`. The phases are designed to be executed in order, with each phase leaving the app in a deployable state.
-
-**Phase 1** (repo transfer) may need to happen first since it affects GitHub URLs, but Phases 2-6 can proceed independently of the transfer.
+- `fastapi` + `uvicorn` -- web framework and ASGI server
+- `requests` -- HTTP client for scraping baseball-reference.com
+- `lxml` -- HTML parsing (XPath queries)
+- `cachetools` -- TTL cache decorator (15-minute cache on scraped data)
+- `jinja2` -- template rendering
