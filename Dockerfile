@@ -1,17 +1,24 @@
-FROM python:3.7-slim
+FROM python:3.14-slim AS builder
 
-# Image settings
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
 WORKDIR /app
-EXPOSE 5000
-CMD ["pipenv", "run", "gunicorn", "-c", "config/gunicorn.py", "-b", "0.0.0.0:5000", "howmanywinsdoesbrucebochyhave:app"]
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
 
-# Configure and install dependencies
-RUN pip install -U pip pipenv tox setuptools
+COPY howmanywinsdoesbrucebochyhave/ howmanywinsdoesbrucebochyhave/
 
-COPY Pipfile Pipfile.lock /app/
-RUN pipenv install --dev
+FROM python:3.14-slim
 
-# Add project source
-COPY . /app
+RUN groupadd --gid 1000 app && useradd --uid 1000 --gid 1000 --no-create-home app
 
-RUN pipenv run python setup.py install && pipenv run tox
+WORKDIR /app
+COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /app/howmanywinsdoesbrucebochyhave/ howmanywinsdoesbrucebochyhave/
+COPY templates/ templates/
+COPY static/ static/
+
+USER app
+EXPOSE 8000
+
+CMD ["/app/.venv/bin/uvicorn", "howmanywinsdoesbrucebochyhave:app", "--host", "0.0.0.0", "--port", "8000"]
