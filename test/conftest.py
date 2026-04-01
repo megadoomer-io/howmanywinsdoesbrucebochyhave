@@ -18,8 +18,31 @@ SAMPLE_HTML = """\
 <table id="manager_stats">
 <thead><tr><th>Year</th><th>W</th><th>L</th></tr></thead>
 <tbody>
-<tr><td data-stat="year_ID">2023</td><td data-stat="W">80</td><td data-stat="L">82</td></tr>
-<tr><td data-stat="year_ID">2024</td><td data-stat="W">94</td><td data-stat="L">68</td></tr>
+<tr>
+  <td data-stat="year_ID">2010</td>
+  <td data-stat="W">92</td><td data-stat="L">70</td>
+  <td data-stat="comments">WS Champs</td>
+</tr>
+<tr>
+  <td data-stat="year_ID">2012</td>
+  <td data-stat="W">94</td><td data-stat="L">68</td>
+  <td data-stat="comments">WS Champs</td>
+</tr>
+<tr>
+  <td data-stat="year_ID">2014</td>
+  <td data-stat="W">88</td><td data-stat="L">74</td>
+  <td data-stat="comments">WS Champs</td>
+</tr>
+<tr>
+  <td data-stat="year_ID">2023</td>
+  <td data-stat="W">90</td><td data-stat="L">72</td>
+  <td data-stat="comments">WS Champs</td>
+</tr>
+<tr>
+  <td data-stat="year_ID">2024</td>
+  <td data-stat="W">94</td><td data-stat="L">68</td>
+  <td data-stat="comments"></td>
+</tr>
 </tbody>
 <tfoot>
 <tr><td data-stat="year_ID">Career</td><td data-stat="W">2003</td><td data-stat="L">1789</td></tr>

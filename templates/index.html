@@ -4,9 +4,37 @@
         <link rel="stylesheet" href="/static/css/styles.css" />
     </head>
     <body>
-        <div class="hero">Bruce Bochy has <span class="important">{{ wins }}</span> wins</div>
+        <div class="hero">
+            <div>Bruce Bochy has <span class="important">{{ wins }}</span> wins</div>
+            {% if championships > 0 %}
+            <div class="trophies">{{ "\U0001f3c6" * championships }}</div>
+            {% endif %}
+        </div>
     </body>
     <footer class="minor">
         <div>last refreshed: {{ revised }}</div>
+        <div class="theme-switcher">
+            <span class="theme-swatch" data-theme="padres" title="San Diego Padres"></span>
+            <span class="theme-swatch" data-theme="giants" title="San Francisco Giants"></span>
+            <span class="theme-swatch" data-theme="rangers" title="Texas Rangers"></span>
+        </div>
     </footer>
+    <script>
+        (function() {
+            var theme = localStorage.getItem("theme") || "giants";
+            document.documentElement.setAttribute("data-theme", theme);
+
+            document.querySelectorAll(".theme-swatch").forEach(function(swatch) {
+                if (swatch.dataset.theme === theme) swatch.classList.add("active");
+                swatch.addEventListener("click", function() {
+                    var t = this.dataset.theme;
+                    document.documentElement.setAttribute("data-theme", t);
+                    localStorage.setItem("theme", t);
+                    document.querySelectorAll(".theme-swatch").forEach(function(s) {
+                        s.classList.toggle("active", s.dataset.theme === t);
+                    });
+                });
+            });
+        })();
+    </script>
 </html>
