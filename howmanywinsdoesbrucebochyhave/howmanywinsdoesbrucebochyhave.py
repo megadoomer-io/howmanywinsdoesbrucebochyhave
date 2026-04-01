@@ -51,17 +51,30 @@ def get_wins(doc: lxml.html.HtmlElement) -> str:
     return extract_field(row, "W")
 
 
-def get_championships(doc: lxml.html.HtmlElement) -> int:
+TEAM_KEY_MAP = {
+    "San Diego Padres": "padres",
+    "San Francisco Giants": "giants",
+    "Texas Rangers": "rangers",
+}
+
+
+def get_championships_by_team(doc: lxml.html.HtmlElement) -> dict[str, int]:
+    counts: dict[str, int] = {"giants": 0, "padres": 0, "rangers": 0}
     table = extract_table(doc, "manager_stats")
     rows = table.find(".//tbody")
     if rows is None:
-        return 0
-    count = 0
+        return counts
     for tr in rows.findall(".//tr"):
         comments = tr.find('.//td[@data-stat="comments"]')
-        if comments is not None and comments.text_content().strip() == "WS Champs":
-            count += 1
-    return count
+        if comments is None or comments.text_content().strip() != "WS Champs":
+            continue
+        team_td = tr.find('.//td[@data-stat="team_ID"]')
+        if team_td is None:
+            continue
+        team_key = TEAM_KEY_MAP.get(team_td.text_content().strip())
+        if team_key:
+            counts[team_key] += 1
+    return counts
 
 
 def get_revised(doc: lxml.html.HtmlElement) -> str:
@@ -84,7 +97,7 @@ def create_app() -> fastapi.FastAPI:
         doc = lxml.html.fromstring(get_document(MANAGER_URL))
         wins = get_wins(doc)
         revised = get_revised(doc)
-        championships = get_championships(doc)
+        championships = get_championships_by_team(doc)
         content = templates.TemplateResponse(
             request, "index.html", {"wins": wins, "revised": revised, "championships": championships}
         )

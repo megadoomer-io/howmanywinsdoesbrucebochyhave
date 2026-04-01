@@ -30,20 +30,24 @@ class TestParsing:
         with pytest.raises(ValueError, match="Table 'nonexistent' not found"):
             app_module.extract_table(doc, "nonexistent")
 
-    def test_get_championships(self, sample_html: str) -> None:
+    def test_get_championships_by_team(self, sample_html: str) -> None:
         doc = lxml.html.fromstring(sample_html)
-        assert app_module.get_championships(doc) == 4
+        result = app_module.get_championships_by_team(doc)
+        assert result == {"giants": 3, "padres": 0, "rangers": 1}
 
-    def test_get_championships_none(self) -> None:
+    def test_get_championships_by_team_none(self) -> None:
         html = """<html><body><table id="manager_stats">
         <thead><tr><th>Year</th></tr></thead>
         <tbody>
-        <tr><td data-stat="year_ID">2024</td><td data-stat="W">94</td><td data-stat="comments"></td></tr>
+        <tr><td data-stat="year_ID">2024</td><td data-stat="W">94</td>
+        <td data-stat="team_ID">Texas Rangers</td>
+        <td data-stat="comments"></td></tr>
         </tbody>
         <tfoot><tr><td data-stat="W">94</td></tr></tfoot>
         </table></body></html>"""
         doc = lxml.html.fromstring(html)
-        assert app_module.get_championships(doc) == 0
+        result = app_module.get_championships_by_team(doc)
+        assert result == {"giants": 0, "padres": 0, "rangers": 0}
 
     def test_extract_field_not_found(self, sample_html: str) -> None:
         doc = lxml.html.fromstring(sample_html)
@@ -95,8 +99,11 @@ class TestRoute:
     async def test_index_includes_championships(self, client: httpx.AsyncClient) -> None:
         response = await client.get("/")
         assert response.status_code == 200
-        # 4 WS Champs rows in sample HTML = 4 trophies
-        assert response.text.count("\U0001f3c6") == 4
+        # Default theme is Giants = 3 trophies rendered server-side
+        assert response.text.count("\U0001f3c6") == 3
+        # Per-team data embedded for JS theme switching
+        assert '"giants": 3' in response.text
+        assert '"rangers": 1' in response.text
 
     @pytest.mark.anyio
     async def test_healthz(self, client: httpx.AsyncClient) -> None:

@@ -20,26 +20,31 @@ SAMPLE_HTML = """\
 <tbody>
 <tr>
   <td data-stat="year_ID">2010</td>
+  <td data-stat="team_ID">San Francisco Giants</td>
   <td data-stat="W">92</td><td data-stat="L">70</td>
   <td data-stat="comments">WS Champs</td>
 </tr>
 <tr>
   <td data-stat="year_ID">2012</td>
+  <td data-stat="team_ID">San Francisco Giants</td>
   <td data-stat="W">94</td><td data-stat="L">68</td>
   <td data-stat="comments">WS Champs</td>
 </tr>
 <tr>
   <td data-stat="year_ID">2014</td>
+  <td data-stat="team_ID">San Francisco Giants</td>
   <td data-stat="W">88</td><td data-stat="L">74</td>
   <td data-stat="comments">WS Champs</td>
 </tr>
 <tr>
   <td data-stat="year_ID">2023</td>
+  <td data-stat="team_ID">Texas Rangers</td>
   <td data-stat="W">90</td><td data-stat="L">72</td>
   <td data-stat="comments">WS Champs</td>
 </tr>
 <tr>
   <td data-stat="year_ID">2024</td>
+  <td data-stat="team_ID">Texas Rangers</td>
   <td data-stat="W">94</td><td data-stat="L">68</td>
   <td data-stat="comments"></td>
 </tr>

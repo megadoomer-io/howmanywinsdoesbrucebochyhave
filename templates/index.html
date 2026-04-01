@@ -6,9 +6,7 @@
     <body>
         <div class="hero">
             <div>Bruce Bochy has <span class="important">{{ wins }}</span> wins</div>
-            {% if championships > 0 %}
-            <div class="trophies">{{ "\U0001f3c6" * championships }}</div>
-            {% endif %}
+            <div class="trophies">{{ "\U0001f3c6" * championships.giants }}</div>
         </div>
     </body>
     <footer class="minor">
@@ -21,8 +19,18 @@
     </footer>
     <script>
         (function() {
+            var championships = {"giants": {{ championships.giants }}, "padres": {{ championships.padres }}, "rangers": {{ championships.rangers }}};
+            var trophy = "\uD83C\uDFC6";
+
+            function updateTrophies(team) {
+                var count = championships[team] || 0;
+                var el = document.querySelector(".trophies");
+                el.textContent = trophy.repeat(count);
+            }
+
             var theme = localStorage.getItem("theme") || "giants";
             document.documentElement.setAttribute("data-theme", theme);
+            updateTrophies(theme);
 
             document.querySelectorAll(".theme-swatch").forEach(function(swatch) {
                 if (swatch.dataset.theme === theme) swatch.classList.add("active");
@@ -30,6 +38,7 @@
                     var t = this.dataset.theme;
                     document.documentElement.setAttribute("data-theme", t);
                     localStorage.setItem("theme", t);
+                    updateTrophies(t);
                     document.querySelectorAll(".theme-swatch").forEach(function(s) {
                         s.classList.toggle("active", s.dataset.theme === t);
                     });
