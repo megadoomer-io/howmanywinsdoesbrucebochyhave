@@ -51,6 +51,19 @@ def get_wins(doc: lxml.html.HtmlElement) -> str:
     return extract_field(row, "W")
 
 
+def get_championships(doc: lxml.html.HtmlElement) -> int:
+    table = extract_table(doc, "manager_stats")
+    rows = table.find(".//tbody")
+    if rows is None:
+        return 0
+    count = 0
+    for tr in rows.findall(".//tr"):
+        comments = tr.find('.//td[@data-stat="comments"]')
+        if comments is not None and comments.text_content().strip() == "WS Champs":
+            count += 1
+    return count
+
+
 def get_revised(doc: lxml.html.HtmlElement) -> str:
     meta = doc.find("./head/meta[@name='revised']")
     if meta is None:
@@ -62,12 +75,19 @@ def create_app() -> fastapi.FastAPI:
     app = fastapi.FastAPI(title="HowManyWinsDoesBruceBochyHave")
     app.mount("/static", fastapi.staticfiles.StaticFiles(directory="static"), name="static")
 
+    @app.get("/healthz")
+    def healthz() -> dict[str, str]:
+        return {"status": "ok"}
+
     @app.get("/", response_class=fastapi.responses.HTMLResponse)
     def index(request: fastapi.Request) -> fastapi.responses.HTMLResponse:
         doc = lxml.html.fromstring(get_document(MANAGER_URL))
         wins = get_wins(doc)
         revised = get_revised(doc)
-        content = templates.TemplateResponse(request, "index.html", {"wins": wins, "revised": revised})
+        championships = get_championships(doc)
+        content = templates.TemplateResponse(
+            request, "index.html", {"wins": wins, "revised": revised, "championships": championships}
+        )
         return content
 
     return app
