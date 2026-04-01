@@ -30,6 +30,21 @@ class TestParsing:
         with pytest.raises(ValueError, match="Table 'nonexistent' not found"):
             app_module.extract_table(doc, "nonexistent")
 
+    def test_get_championships(self, sample_html: str) -> None:
+        doc = lxml.html.fromstring(sample_html)
+        assert app_module.get_championships(doc) == 4
+
+    def test_get_championships_none(self) -> None:
+        html = """<html><body><table id="manager_stats">
+        <thead><tr><th>Year</th></tr></thead>
+        <tbody>
+        <tr><td data-stat="year_ID">2024</td><td data-stat="W">94</td><td data-stat="comments"></td></tr>
+        </tbody>
+        <tfoot><tr><td data-stat="W">94</td></tr></tfoot>
+        </table></body></html>"""
+        doc = lxml.html.fromstring(html)
+        assert app_module.get_championships(doc) == 0
+
     def test_extract_field_not_found(self, sample_html: str) -> None:
         doc = lxml.html.fromstring(sample_html)
         table = app_module.extract_table(doc, "manager_stats")
@@ -75,6 +90,19 @@ class TestRoute:
     async def test_index_includes_revised(self, client: httpx.AsyncClient) -> None:
         response = await client.get("/")
         assert "01:23, 15 March 2026" in response.text
+
+    @pytest.mark.anyio
+    async def test_index_includes_championships(self, client: httpx.AsyncClient) -> None:
+        response = await client.get("/")
+        assert response.status_code == 200
+        # 4 WS Champs rows in sample HTML = 4 trophies
+        assert response.text.count("\U0001f3c6") == 4
+
+    @pytest.mark.anyio
+    async def test_healthz(self, client: httpx.AsyncClient) -> None:
+        response = await client.get("/healthz")
+        assert response.status_code == 200
+        assert response.json() == {"status": "ok"}
 
     @pytest.mark.anyio
     async def test_static_css(self, client: httpx.AsyncClient) -> None:
