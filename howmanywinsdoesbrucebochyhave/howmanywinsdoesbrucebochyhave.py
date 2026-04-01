@@ -1,66 +1,73 @@
-#!/usr/bin/env python
-
-
 import cachetools.func
-import flask
+import fastapi
+import fastapi.responses
+import fastapi.staticfiles
+import fastapi.templating
 import lxml.html
 import requests
 
 MANAGER_URL = "https://www.baseball-reference.com/managers/bochybr01.shtml"
 
+templates = fastapi.templating.Jinja2Templates(directory="templates")
+
 
 @cachetools.func.ttl_cache(ttl=(15 * 60))
-def get_document(url=MANAGER_URL):
-    return requests.get(url).text
+def get_document(url: str = MANAGER_URL) -> str:
+    return requests.get(url, timeout=30).text
 
 
-def extract_table(doc, table_id):
-    return doc.find('.//table[@id="{}"]'.format(table_id))
+def extract_table(doc: lxml.html.HtmlElement, table_id: str) -> lxml.html.HtmlElement:
+    result = doc.find(f'.//table[@id="{table_id}"]')
+    if result is None:
+        raise ValueError(f"Table '{table_id}' not found")
+    return result
 
 
-def extract_table_footer(table):
-    return table.find("./tfoot")
+def extract_table_footer(table: lxml.html.HtmlElement) -> lxml.html.HtmlElement:
+    result = table.find("./tfoot")
+    if result is None:
+        raise ValueError("Table footer not found")
+    return result
 
 
-def extract_field(row, field):
-    return row.find('.//td[@data-stat="{}"]'.format(field)).text
+def extract_field(row: lxml.html.HtmlElement, field: str) -> str:
+    element = row.find(f'.//td[@data-stat="{field}"]')
+    if element is None or element.text is None:
+        raise ValueError(f"Field '{field}' not found")
+    return element.text
 
 
-def extract_row(rows, index):
-    return rows.find(".//tr[{}]".format(index))
+def extract_row(rows: lxml.html.HtmlElement, index: str) -> lxml.html.HtmlElement:
+    result = rows.find(f".//tr[{index}]")
+    if result is None:
+        raise ValueError(f"Row at index '{index}' not found")
+    return result
 
 
-def get_wins(doc):
+def get_wins(doc: lxml.html.HtmlElement) -> str:
     table = extract_table(doc, "manager_stats")
     footer = extract_table_footer(table)
     row = extract_row(footer, "last()")
-    value = extract_field(row, "W")
-
-    return value
+    return extract_field(row, "W")
 
 
-def get_revised(doc):
-    return doc.find("./head/meta[@name='revised']").attrib["content"]
+def get_revised(doc: lxml.html.HtmlElement) -> str:
+    meta = doc.find("./head/meta[@name='revised']")
+    if meta is None:
+        raise ValueError("Revised meta tag not found")
+    return str(meta.attrib["content"])
 
 
-class HowManyManagerWins(flask.Flask):
+def create_app() -> fastapi.FastAPI:
+    app = fastapi.FastAPI(title="HowManyWinsDoesBruceBochyHave")
+    app.mount("/static", fastapi.staticfiles.StaticFiles(directory="static"), name="static")
 
-    def __init__(self, manager_url, name):
-        self.manager_url = manager_url
-        super().__init__(name)
-        self.route("/")(self.index)
-
-    def index(self):
-        doc = lxml.html.fromstring(get_document(self.manager_url))
+    @app.get("/", response_class=fastapi.responses.HTMLResponse)
+    def index(request: fastapi.Request) -> fastapi.responses.HTMLResponse:
+        doc = lxml.html.fromstring(get_document(MANAGER_URL))
         wins = get_wins(doc)
         revised = get_revised(doc)
-        content = flask.render_template("index.html", wins=wins, revised=revised)
-        return flask.make_response(content)
+        content = templates.TemplateResponse(request, "index.html", {"wins": wins, "revised": revised})
+        return content
 
-
-def create_app():
-    return HowManyManagerWins(MANAGER_URL, "HowManyWinsDoesBruceBochyHave")
-
-
-if __name__ == "__main__":
-    create_app().run()
+    return app

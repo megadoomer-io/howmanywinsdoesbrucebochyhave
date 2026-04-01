@@ -1,0 +1,50 @@
+[project]
+name = "howmanywinsdoesbrucebochyhave"
+version = "1.0.0"
+description = "Source code for howmanywinsdoesbrucebochyhave.com"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "cachetools>=5.5",
+    "fastapi>=0.115",
+    "jinja2>=3.1",
+    "lxml>=5.3",
+    "requests>=2.32",
+    "uvicorn[standard]>=0.34",
+]
+
+[project.optional-dependencies]
+dev = [
+    "httpx>=0.28",
+    "mypy>=1.14",
+    "pytest>=8.3",
+    "pytest-mock>=3.14",
+    "ruff>=0.9",
+    "types-cachetools>=5.5",
+    "types-lxml>=2024.12",
+    "types-requests>=2.32",
+]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+    "B",
+    "SIM",
+    "RUF",
+]
+
+[tool.mypy]
+python_version = "3.14"
+strict = true
+warn_return_any = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["test"]

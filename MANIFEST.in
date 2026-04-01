@@ -1,8 +1,0 @@
-recursive-include tests *
-recursive-exclude * __pycache__
-recursive-exclude * *.py[co]
-recursive-include docs *.rst Makefile make.bat
-recursive-include .cache *
-recursive-include .tox *
-recursive-include examples *
-recursive-include *.egg-info *
