@@ -1,18 +1,43 @@
-html, body, footer {
-    /* Team colors from https://www.schemecolor.com/san-francisco-giants-mlb-logo-colors.php */
-    background-color: #231F20;
-    color: #F4793E;
+/* Default theme: San Francisco Giants */
+:root,
+[data-theme="giants"] {
+    --bg-color: #231F20;
+    --text-color: #FD5A1E;
+    --accent-color: #ADADAD;
+}
 
-    font-family: Helvetica, Roboto, "Segoe UI", Calibri, sans-serif
+[data-theme="padres"] {
+    --bg-color: #2F241D;
+    --text-color: #FFC425;
+    --accent-color: #A2AAAD;
+}
+
+[data-theme="rangers"] {
+    --bg-color: #003278;
+    --text-color: #FFFFFF;
+    --accent-color: #C0111F;
+}
+
+html, body, footer {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: Helvetica, Roboto, "Segoe UI", Calibri, sans-serif;
 }
 
 .hero {
     width: 100vw;
-    height: 95vh;
+    height: 90vh;
     font-size: 24pt;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    gap: 0.5em;
+}
+
+.trophies {
+    font-size: 32pt;
+    letter-spacing: 0.2em;
 }
 
 .important {
@@ -22,5 +47,48 @@ html, body, footer {
 }
 
 .minor {
-    color: #C49D6E;
+    color: var(--accent-color);
+}
+
+footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1em 1em;
+}
+
+.theme-switcher {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+}
+
+.theme-swatch {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s;
+}
+
+.theme-swatch:hover {
+    transform: scale(1.2);
+}
+
+.theme-swatch.active {
+    border-color: var(--text-color);
+    transform: scale(1.2);
+}
+
+.theme-swatch[data-theme="giants"] {
+    background-color: #FD5A1E;
+}
+
+.theme-swatch[data-theme="padres"] {
+    background-color: #FFC425;
+}
+
+.theme-swatch[data-theme="rangers"] {
+    background-color: #003278;
 }
