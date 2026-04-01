@@ -1,8 +1,35 @@
+import pytest
 
-collect_ignore = [
-    '__init__.py'
-]
+import howmanywinsdoesbrucebochyhave.howmanywinsdoesbrucebochyhave as app_module
 
 
-def pytest_runtest_setup():
-    print('Setting up a few things...')
+@pytest.fixture(autouse=True)
+def _clear_cache() -> None:
+    """Clear the TTL cache between tests so mocked responses are used."""
+    app_module.get_document.cache_clear()
+
+
+SAMPLE_HTML = """\
+<html>
+<head>
+<meta name="revised" content="01:23, 15 March 2026" />
+</head>
+<body>
+<table id="manager_stats">
+<thead><tr><th>Year</th><th>W</th><th>L</th></tr></thead>
+<tbody>
+<tr><td data-stat="year_ID">2023</td><td data-stat="W">80</td><td data-stat="L">82</td></tr>
+<tr><td data-stat="year_ID">2024</td><td data-stat="W">94</td><td data-stat="L">68</td></tr>
+</tbody>
+<tfoot>
+<tr><td data-stat="year_ID">Career</td><td data-stat="W">2003</td><td data-stat="L">1789</td></tr>
+</tfoot>
+</table>
+</body>
+</html>
+"""
+
+
+@pytest.fixture
+def sample_html() -> str:
+    return SAMPLE_HTML
