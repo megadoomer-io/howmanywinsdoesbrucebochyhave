@@ -10,37 +10,37 @@ projects:
     facts:
       language:
         value: python
-        provenance: human-authored
-        last_evaluated: 2026-09-04
+        provenance: agent-asserted
+        last_evaluated: 2026-09-08
       deploy:
         kind: kustomize
         config_repo:
           value: megadoomer-io/megadoomer-config
-          provenance: human-authored
-          last_evaluated: 2026-09-04
+          provenance: agent-asserted
+          last_evaluated: 2026-09-08
         routing:
           value: gateway-api
-          provenance: human-authored
-          last_evaluated: 2026-09-04
+          provenance: agent-asserted
+          last_evaluated: 2026-09-08
       service:
         hostname:
           value: howmanywinsdoesbrucebochyhave.com
-          provenance: human-authored
-          last_evaluated: 2026-09-04
+          provenance: agent-asserted
+          last_evaluated: 2026-09-08
         handles_own_auth:
           value: false
-          provenance: human-authored
-          last_evaluated: 2026-09-04
+          provenance: agent-asserted
+          last_evaluated: 2026-09-08
       auth_gap:
         value: true
-        provenance: human-authored
-        last_evaluated: 2026-09-04
+        provenance: agent-asserted
+        last_evaluated: 2026-09-08
         notes: >-
           intentionally public — no oauth2-proxy in front. This is an ACCEPTED
           gap, not an incident: the site exposes only public scraped data.
     links:
       - repository: megadoomer-io/megadoomer-config
-        directory: applications/static/howmanywins/do/
+        directory: applications/static/howmanywins/
         kind: config-repo
-        provenance: human-authored
-        last_evaluated: 2026-09-04
+        provenance: agent-asserted
+        last_evaluated: 2026-09-08
